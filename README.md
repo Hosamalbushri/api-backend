@@ -13,6 +13,8 @@ Python used **no Celery workers and no scheduled sync jobs**. Laravel therefore 
 
 Architecture (modules, dependencies, deployment) is documented in [docs/architecture.md](docs/architecture.md).
 
+Requires **PHP 8.3**. Composer is platform-pinned to 8.3.32 so Laravel 13 resolves **Symfony 7.4** (PHP 8.3) instead of Symfony 8 (PHP 8.4+). Docker uses `php:8.3-cli`.
+
 ## Quick start
 
 ```bash

@@ -133,6 +133,8 @@ Feature tests live in `tests/Feature`. Module unit tests live under `packages/Ne
 
 ## Deployment
 
+Requires PHP 8.3. Composer `config.platform.php` is `8.3.32` so installs stay compatible with this runtime (Symfony 7.4, not Symfony 8).
+
 1. `composer install --no-dev --optimize-autoloader`
 2. Set production `.env` (`APP_DEBUG=false`, strong `JWT_SECRET`, explicit `CORS_ORIGINS`, `ALLOW_DEV_TOKEN=false`, `SEED_ON_BOOT=false` after first seed)
 3. `php artisan migrate --force`
