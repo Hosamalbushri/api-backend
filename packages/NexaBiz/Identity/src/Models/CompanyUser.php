@@ -2,9 +2,9 @@
 
 namespace NexaBiz\Identity\Models;
 
+use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
 
 class CompanyUser extends Model
 {

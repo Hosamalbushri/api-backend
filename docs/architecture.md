@@ -129,6 +129,8 @@ php artisan test
 vendor/bin/pint --test
 ```
 
+Tests boot `.env.testing` (in-memory SQLite). A missing production `.env` is ignored. PHPUnit `force="true"` prevents live `APP_ENV` / `DB_*` from leaking into the suite.
+
 Feature tests live in `tests/Feature`. Module unit tests live under `packages/NexaBiz/*/tests`.
 
 ## Deployment

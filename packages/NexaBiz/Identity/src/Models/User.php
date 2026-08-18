@@ -2,17 +2,16 @@
 
 namespace NexaBiz\Identity\Models;
 
+use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
+use NexaBiz\Identity\Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
-use NexaBiz\Identity\Database\Factories\UserFactory;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
-
     use HasUuidPrimaryKey;
 
     public $incrementing = false;

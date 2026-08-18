@@ -2,8 +2,8 @@
 
 namespace NexaBiz\Audit\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
+use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
 {

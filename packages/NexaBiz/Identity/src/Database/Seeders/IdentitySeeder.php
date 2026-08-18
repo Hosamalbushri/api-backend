@@ -2,19 +2,19 @@
 
 namespace NexaBiz\Identity\Database\Seeders;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use NexaBiz\Identity\Events\CompanyProvisioned;
+use NexaBiz\Identity\Support\PermissionsCatalog;
 use NexaBiz\Identity\Models\Company;
 use NexaBiz\Identity\Models\CompanyUser;
 use NexaBiz\Identity\Models\Permission;
 use NexaBiz\Identity\Models\Role;
 use NexaBiz\Identity\Models\RolePermission;
 use NexaBiz\Identity\Models\User;
-use NexaBiz\Identity\Support\PermissionsCatalog;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class IdentitySeeder extends Seeder
 {

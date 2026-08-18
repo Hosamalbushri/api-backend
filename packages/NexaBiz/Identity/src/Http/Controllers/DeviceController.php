@@ -2,17 +2,17 @@
 
 namespace NexaBiz\Identity\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use NexaBiz\Identity\Support\AuthContext;
+use NexaBiz\Identity\Services\AuthService;
+use NexaBiz\Identity\Services\Authorization;
+use NexaBiz\Identity\Support\PermissionsCatalog;
 use NexaBiz\Core\Exceptions\ValidationAppException;
 use NexaBiz\Core\Http\Controllers\Controller;
 use NexaBiz\Identity\Models\Device;
 use NexaBiz\Identity\Models\User;
-use NexaBiz\Identity\Services\Authorization;
-use NexaBiz\Identity\Services\AuthService;
-use NexaBiz\Identity\Support\AuthContext;
-use NexaBiz\Identity\Support\PermissionsCatalog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DeviceController extends Controller
 {

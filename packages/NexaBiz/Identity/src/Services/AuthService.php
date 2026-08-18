@@ -2,10 +2,6 @@
 
 namespace NexaBiz\Identity\Services;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use NexaBiz\Audit\Contracts\AuditWriter;
 use NexaBiz\Core\Exceptions\ForbiddenException;
 use NexaBiz\Core\Exceptions\NotFoundException;
@@ -21,6 +17,10 @@ use NexaBiz\Identity\Models\Role;
 use NexaBiz\Identity\Models\RolePermission;
 use NexaBiz\Identity\Models\SyncDisableRequest;
 use NexaBiz\Identity\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthService
 {

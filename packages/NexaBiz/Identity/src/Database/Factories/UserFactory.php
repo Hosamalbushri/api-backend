@@ -2,10 +2,10 @@
 
 namespace NexaBiz\Identity\Database\Factories;
 
+use NexaBiz\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use NexaBiz\Identity\Models\User;
 
 /**
  * @extends Factory<User>

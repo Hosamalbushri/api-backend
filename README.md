@@ -29,13 +29,15 @@ docker compose up --build
 
 Flutter dart-defines are unchanged (`SYNC_API_BASE_URL=http://127.0.0.1:8000`).
 
-Local tests:
+Local tests (do **not** need a `.env` file; PHPUnit uses `.env.testing` and in-memory SQLite):
 
 ```bash
 cd backend-laravel
 php artisan test
 vendor/bin/pint --test
 ```
+
+Host environment variables are forced to testing values so a production `.env` or cPanel env cannot point tests at the live database.
 
 ## Mapping (Python → Laravel)
 

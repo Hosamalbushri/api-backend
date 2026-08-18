@@ -2,9 +2,9 @@
 
 namespace NexaBiz\Identity\Models;
 
+use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use NexaBiz\Core\Models\Concerns\HasUuidPrimaryKey;
 
 class Permission extends Model
 {

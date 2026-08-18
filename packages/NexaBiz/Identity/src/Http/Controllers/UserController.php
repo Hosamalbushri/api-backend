@@ -2,22 +2,22 @@
 
 namespace NexaBiz\Identity\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use NexaBiz\Audit\Contracts\AuditWriter;
+use NexaBiz\Identity\Services\AdminSafety;
+use NexaBiz\Identity\Support\AuthContext;
+use NexaBiz\Identity\Services\AuthService;
+use NexaBiz\Identity\Services\Authorization;
+use NexaBiz\Identity\Support\PermissionsCatalog;
 use NexaBiz\Core\Exceptions\ValidationAppException;
 use NexaBiz\Core\Http\Controllers\Controller;
 use NexaBiz\Identity\Http\Requests\StoreUserRequest;
 use NexaBiz\Identity\Http\Resources\UserResource;
 use NexaBiz\Identity\Models\CompanyUser;
 use NexaBiz\Identity\Models\User;
-use NexaBiz\Identity\Services\AdminSafety;
-use NexaBiz\Identity\Services\Authorization;
-use NexaBiz\Identity\Services\AuthService;
-use NexaBiz\Identity\Support\AuthContext;
-use NexaBiz\Identity\Support\PermissionsCatalog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {

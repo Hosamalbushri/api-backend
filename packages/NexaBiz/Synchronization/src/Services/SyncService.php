@@ -2,9 +2,6 @@
 
 namespace NexaBiz\Synchronization\Services;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use NexaBiz\Core\Exceptions\ConflictException;
 use NexaBiz\Core\Exceptions\NotFoundException;
 use NexaBiz\Core\Exceptions\ValidationAppException;
@@ -15,6 +12,9 @@ use NexaBiz\Synchronization\Models\SyncEntity;
 use NexaBiz\Synchronization\Models\SyncOperation;
 use NexaBiz\Synchronization\Models\SyncSequence;
 use NexaBiz\Synchronization\Support\SupportedEntities;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SyncService implements SyncEngine
 {

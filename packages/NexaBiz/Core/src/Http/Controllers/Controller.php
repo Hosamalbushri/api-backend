@@ -2,4 +2,6 @@
 
 namespace NexaBiz\Core\Http\Controllers;
 
-abstract class Controller {}
+abstract class Controller
+{
+}
