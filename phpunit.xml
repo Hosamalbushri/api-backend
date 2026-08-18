@@ -7,14 +7,18 @@
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
+            <directory>packages/NexaBiz/Core/tests</directory>
+            <directory>packages/NexaBiz/Identity/tests</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>packages/NexaBiz/Synchronization/tests</directory>
         </testsuite>
     </testsuites>
     <source>
         <include>
             <directory>app</directory>
+            <directory>packages</directory>
         </include>
     </source>
     <php>

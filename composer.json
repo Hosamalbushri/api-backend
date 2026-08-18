@@ -22,8 +22,11 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "NexaBiz\\Core\\": "packages/NexaBiz/Core/src/",
+            "NexaBiz\\Audit\\": "packages/NexaBiz/Audit/src/",
+            "NexaBiz\\Identity\\": "packages/NexaBiz/Identity/src/",
+            "NexaBiz\\Synchronization\\": "packages/NexaBiz/Synchronization/src/"
         }
     },
     "autoload-dev": {
@@ -47,6 +50,12 @@
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --test"
+        ],
+        "lint:fix": [
+            "@php vendor/bin/pint"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

@@ -1,0 +1,10 @@
+{
+    "name": "nexabiz/identity",
+    "description": "JWT authentication, RBAC, companies, devices, and admin HTTP APIs.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "NexaBiz\\Identity\\": "src/"
+        }
+    }
+}

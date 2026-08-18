@@ -1,0 +1,10 @@
+{
+    "name": "nexabiz/synchronization",
+    "description": "Request-driven multi-device replication engine for Flutter RemoteSyncApi.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "NexaBiz\\Synchronization\\": "src/"
+        }
+    }
+}

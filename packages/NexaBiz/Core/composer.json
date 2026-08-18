@@ -1,0 +1,10 @@
+{
+    "name": "nexabiz/core",
+    "description": "Shared infrastructure: exceptions, security middleware, health, production guards.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "NexaBiz\\Core\\": "src/"
+        }
+    }
+}

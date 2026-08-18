@@ -1,0 +1,10 @@
+{
+    "name": "nexabiz/audit",
+    "description": "Audit logging for NexaBiz identity and synchronization actions.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "NexaBiz\\Audit\\": "src/"
+        }
+    }
+}

@@ -1,20 +1,19 @@
 <?php
 
-use App\Exceptions\AppException;
-use App\Http\Middleware\AuthRateLimit;
-use App\Http\Middleware\CorrelationId;
-use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use NexaBiz\Core\Exceptions\AppException;
+use NexaBiz\Core\Http\Middleware\AuthRateLimit;
+use NexaBiz\Core\Http\Middleware\CorrelationId;
+use NexaBiz\Core\Http\Middleware\SecurityHeaders;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )

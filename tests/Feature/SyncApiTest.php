@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use Database\Seeders\IdentitySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use NexaBiz\Identity\Database\Seeders\IdentitySeeder;
 use Tests\TestCase;
 
 class SyncApiTest extends TestCase
