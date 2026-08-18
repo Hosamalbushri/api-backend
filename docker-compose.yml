@@ -1,0 +1,40 @@
+# Laravel synchronization backend (parity with backend/ FastAPI).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sync
+      POSTGRES_PASSWORD: sync
+      POSTGRES_DB: sync_experimental
+    ports:
+      - "5432:5432"
+    volumes:
+      - laravel_sync_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sync -d sync_experimental"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: sync_experimental
+      DB_USERNAME: sync
+      DB_PASSWORD: sync
+      QUEUE_CONNECTION: sync
+      CACHE_STORE: file
+      SESSION_DRIVER: array
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  laravel_sync_pg_data:
