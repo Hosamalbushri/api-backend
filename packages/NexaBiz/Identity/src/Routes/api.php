@@ -9,6 +9,7 @@ use NexaBiz\Identity\Http\Controllers\UserController;
 use NexaBiz\Identity\Http\Middleware\AuthenticateApi;
 
 Route::prefix('api/v1')->group(function (): void {
+    Route::get('/health', [NexaBiz\Identity\Http\Controllers\HealthController::class, 'check']);
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 

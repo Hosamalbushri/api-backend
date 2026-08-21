@@ -1,22 +1,20 @@
 <?php
 
-namespace NexaBiz\Synchronization\Services;
+namespace App\Sync;
 
-use NexaBiz\Core\Exceptions\ConflictException;
-use NexaBiz\Core\Exceptions\NotFoundException;
-use NexaBiz\Core\Exceptions\ValidationAppException;
-use NexaBiz\Identity\Models\Company;
-use NexaBiz\Synchronization\Contracts\SyncEngine;
-use NexaBiz\Synchronization\Models\SyncChange;
-use NexaBiz\Synchronization\Models\SyncEntity;
-use NexaBiz\Synchronization\Models\SyncOperation;
-use NexaBiz\Synchronization\Models\SyncSequence;
-use NexaBiz\Synchronization\Support\SupportedEntities;
+use App\Exceptions\ConflictException;
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidationAppException;
+use App\Models\Company;
+use App\Models\SyncChange;
+use App\Models\SyncEntity;
+use App\Models\SyncOperation;
+use App\Models\SyncSequence;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class SyncService implements SyncEngine
+class SyncService
 {
     /**
      * Generic experimental sync engine.
@@ -118,11 +116,11 @@ class SyncService implements SyncEngine
             $payload['uuid'] = (string) $op['entity_id'];
         }
         $payload['version'] = $version;
-        $payload['updatedAt'] = $this->epochMs($updatedAt);
+        $payload['updatedAt'] = (int) round($updatedAt->getTimestampMs());
         if ($deleted) {
             $payload['deleted'] = true;
             if ($deletedAt !== null) {
-                $payload['deletedAt'] = $this->epochMs($deletedAt);
+                $payload['deletedAt'] = (int) round($deletedAt->getTimestampMs());
             }
         } elseif (array_key_exists('deleted', $payload)) {
             unset($payload['deleted']);
@@ -369,6 +367,14 @@ class SyncService implements SyncEngine
         $existing->save();
         $this->recordChange($companyId, $existing, $op['type']);
 
+        if ($op['entity_type'] === 'company_profile' && isset($op['payload']['name'])) {
+            $company = Company::query()->find($companyId);
+            if ($company !== null) {
+                $company->name = trim($op['payload']['name']);
+                $company->save();
+            }
+        }
+
         return $this->ackFromEntity($existing, $op['operation_id']);
     }
 
@@ -397,10 +403,6 @@ class SyncService implements SyncEngine
             's' => $since?->toIso8601String(),
             'l' => $limit,
         ]);
-
-        if (SyncChange::query()->where('company_id', $companyId)->count() === 0) {
-            $this->backfillSyncChangesFromEntities($companyId);
-        }
 
         $query = SyncChange::query()->where('company_id', $companyId);
         if ($entityType) {
@@ -465,27 +467,5 @@ class SyncService implements SyncEngine
         } catch (\Throwable) {
             return false;
         }
-    }
-
-    private function backfillSyncChangesFromEntities(string $companyId): void
-    {
-        $entities = SyncEntity::query()->where('company_id', $companyId)->get();
-        if ($entities->isEmpty()) {
-            return;
-        }
-
-        foreach ($entities as $entity) {
-            $this->recordChange($companyId, $entity, 'create');
-        }
-
-        Log::channel('sync')->info('Backfilled {count} sync_changes rows for company={c}', [
-            'count' => $entities->count(),
-            'c' => $companyId,
-        ]);
-    }
-
-    private function epochMs(CarbonImmutable $dt): int
-    {
-        return (int) round(((float) $dt->format('U.u')) * 1000);
     }
 }

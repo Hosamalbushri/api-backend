@@ -23,8 +23,8 @@ return [
     'seed_admin_email' => env('SEED_ADMIN_EMAIL', 'admin@example.com'),
     'seed_admin_password' => env('SEED_ADMIN_PASSWORD', 'ChangeMeAdmin!123'),
     'seed_admin_name' => env('SEED_ADMIN_NAME', 'Platform Admin'),
-    'seed_company_name' => env('SEED_COMPANY_NAME', 'Demo Company A'),
-    'seed_company_code' => env('SEED_COMPANY_CODE', 'COMPANY-A'),
+    'seed_company_name' => env('SEED_COMPANY_NAME', 'شركة النماء (الريال اليمني)'),
+    'seed_company_code' => env('SEED_COMPANY_CODE', 'NEXABIZ-YE'),
     'seed_company_id' => env('SEED_COMPANY_ID', '00000000-0000-4000-8000-000000000001'),
     'seed_on_boot' => filter_var(env('SEED_ON_BOOT', true), FILTER_VALIDATE_BOOLEAN),
 ];
