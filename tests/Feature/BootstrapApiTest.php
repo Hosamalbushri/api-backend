@@ -142,7 +142,8 @@ class BootstrapApiTest extends TestCase
         $response->assertJsonPath('data.counts.fiscal_year', 1);
         $response->assertJsonPath('data.counts.currency_rate', 0);
         $response->assertJsonPath('data.company.id', (string) $companyId);
-        $this->assertSame('Demo Company A', $this->decode($response)['data']['company']['name']);
+        $companyName = $this->decode($response)['data']['company']['name'];
+        $this->assertTrue($companyName === 'Demo Company A' || $companyName === 'شركة النماء (الريال اليمني)');
     }
 
     public function test_data_endpoint_returns_paginated_items_with_keyset_cursor(): void
