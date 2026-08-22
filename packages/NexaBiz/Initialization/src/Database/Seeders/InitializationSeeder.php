@@ -131,6 +131,15 @@ class InitializationSeeder extends Seeder
                 'notes' => 'العملة الرئيسية - الريال اليمني (YER)',
             ],
         ],
+        [
+            'uuid' => '40000000-0000-4000-8000-000000009999',
+            'type' => 'company_profile',
+            'payload' => [
+                'name' => 'شركة النماء (الريال اليمني)',
+                'defaultCurrencyCode' => 'YER',
+                'fiscalYearStartMonth' => 1,
+            ],
+        ],
     ];
 
     public function run(): void

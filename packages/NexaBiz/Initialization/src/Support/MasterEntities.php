@@ -19,6 +19,7 @@ final class MasterEntities
     public static function types(): array
     {
         $configured = (array) config('nexabiz.master_entity_types', [
+            'company_profile',
             'account',
             'fiscal_year',
             'currency_rate',
