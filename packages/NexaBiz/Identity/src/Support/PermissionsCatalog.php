@@ -178,6 +178,30 @@ final class PermissionsCatalog
 
     public const ACCOUNTING_REPORTS_VIEW = 'accounting.reports.view';
 
+    public const ACCOUNTING_TRANSFERS_VIEW = 'accounting.transfers.view';
+
+    public const ACCOUNTING_TRANSFERS_CREATE = 'accounting.transfers.create';
+
+    public const ACCOUNTING_TRANSFERS_UPDATE = 'accounting.transfers.update';
+
+    public const ACCOUNTING_TRANSFERS_DELETE = 'accounting.transfers.delete';
+
+    public const ACCOUNTING_TRANSFERS_POST = 'accounting.transfers.post';
+
+    public const ACCOUNTING_TRANSFERS_CANCEL = 'accounting.transfers.cancel';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_VIEW = 'accounting.currency_conversions.view';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_CREATE = 'accounting.currency_conversions.create';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_UPDATE = 'accounting.currency_conversions.update';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_DELETE = 'accounting.currency_conversions.delete';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_POST = 'accounting.currency_conversions.post';
+
+    public const ACCOUNTING_CURRENCY_CONVERSIONS_CANCEL = 'accounting.currency_conversions.cancel';
+
     public const RECEIPTS_VIEW = 'receipts.view';
 
     public const RECEIPTS_CREATE = 'receipts.create';
@@ -324,6 +348,18 @@ final class PermissionsCatalog
             [self::ACCOUNTING_VOUCHER_BOOKS_CREATE, 'Create voucher books'],
             [self::ACCOUNTING_VOUCHER_BOOKS_UPDATE, 'Update voucher books'],
             [self::ACCOUNTING_VOUCHER_BOOKS_DELETE, 'Delete voucher books'],
+            [self::ACCOUNTING_TRANSFERS_VIEW, 'View fund transfers'],
+            [self::ACCOUNTING_TRANSFERS_CREATE, 'Create fund transfers'],
+            [self::ACCOUNTING_TRANSFERS_UPDATE, 'Update fund transfers'],
+            [self::ACCOUNTING_TRANSFERS_DELETE, 'Delete fund transfers'],
+            [self::ACCOUNTING_TRANSFERS_POST, 'Post fund transfers'],
+            [self::ACCOUNTING_TRANSFERS_CANCEL, 'Cancel fund transfers'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_VIEW, 'View currency conversions'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_CREATE, 'Create currency conversions'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_UPDATE, 'Update currency conversions'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_DELETE, 'Delete currency conversions'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_POST, 'Post currency conversions'],
+            [self::ACCOUNTING_CURRENCY_CONVERSIONS_CANCEL, 'Cancel currency conversions'],
             [self::ACCOUNTING_REPORTS_VIEW, 'View accounting reports'],
             [self::RECEIPTS_VIEW, 'View receipts'],
             [self::RECEIPTS_CREATE, 'Create receipts'],
@@ -389,6 +425,15 @@ final class PermissionsCatalog
             'financial_transaction|create' => self::RECEIPTS_CREATE,
             'financial_transaction|update' => self::RECEIPTS_UPDATE,
             'financial_transaction|delete' => self::RECEIPTS_CANCEL,
+            'company_profile|create' => self::COMPANIES_UPDATE,
+            'company_profile|update' => self::COMPANIES_UPDATE,
+            'company_profile|delete' => self::COMPANIES_UPDATE,
+            'fund_transfer|create' => self::ACCOUNTING_TRANSFERS_CREATE,
+            'fund_transfer|update' => self::ACCOUNTING_TRANSFERS_UPDATE,
+            'fund_transfer|delete' => self::ACCOUNTING_TRANSFERS_CANCEL,
+            'currency_conversion|create' => self::ACCOUNTING_CURRENCY_CONVERSIONS_CREATE,
+            'currency_conversion|update' => self::ACCOUNTING_CURRENCY_CONVERSIONS_UPDATE,
+            'currency_conversion|delete' => self::ACCOUNTING_CURRENCY_CONVERSIONS_CANCEL,
         ];
     }
 
