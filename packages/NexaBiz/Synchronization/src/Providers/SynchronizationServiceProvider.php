@@ -22,5 +22,11 @@ class SynchronizationServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadRoutesFrom(__DIR__.'/../Routes/api.php');
         Event::listen(CompanyProvisioned::class, EnsureCompanySyncSequence::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \NexaBiz\Synchronization\Console\Commands\PruneSyncChangesCommand::class,
+            ]);
+        }
     }
 }

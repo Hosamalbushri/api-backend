@@ -97,6 +97,43 @@ class SyncService implements SyncEngine
         if ((int) $op['base_version'] < 0) {
             throw new ValidationAppException('base_version must be >= 0');
         }
+        if ($op['entity_type'] === 'journal_entry' && ($op['type'] === 'create' || $op['type'] === 'update')) {
+            $this->validateJournalEntryPayload($op['payload'] ?? []);
+        }
+    }
+
+    private function validateJournalEntryPayload(array $payload): void
+    {
+        if (! is_array($payload)) {
+            return;
+        }
+        $lines = $payload['lines'] ?? $payload['entries'] ?? [];
+        if (! is_array($lines) || count($lines) === 0) {
+            return;
+        }
+
+        $totalDebit = 0.0;
+        $totalCredit = 0.0;
+
+        foreach ($lines as $line) {
+            if (! is_array($line)) {
+                continue;
+            }
+            $debit = (float) ($line['debit'] ?? $line['debitAmount'] ?? 0);
+            $credit = (float) ($line['credit'] ?? $line['creditAmount'] ?? 0);
+            $totalDebit += $debit;
+            $totalCredit += $credit;
+        }
+
+        if (abs($totalDebit - $totalCredit) > 0.001) {
+            throw new ValidationAppException(
+                sprintf('Unbalanced journal entry: total debit (%.2f) != total credit (%.2f)', $totalDebit, $totalCredit),
+                [
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                ]
+            );
+        }
     }
 
     public function payloadForStore(
@@ -276,6 +313,7 @@ class SyncService implements SyncEngine
             (int) $op['base_version'],
             $entity->payload ?? [],
             $entity->updated_at?->toIso8601String(),
+            $op['operation_id'] ?? null,
         );
     }
 
@@ -283,6 +321,15 @@ class SyncService implements SyncEngine
     {
         $existing = $this->getEntity($companyId, $op['entity_type'], $op['entity_id'], true);
         $now = CarbonImmutable::now('UTC');
+
+        // Enforce posted journal entry immutability
+        if ($existing !== null && $op['entity_type'] === 'journal_entry') {
+            $payload = $existing->payload ?? [];
+            $isPosted = ($payload['isPosted'] ?? false) === true || ($payload['status'] ?? '') === 'posted';
+            if ($isPosted && ($op['type'] === 'update' || $op['type'] === 'delete')) {
+                throw new ValidationAppException('Posted journal entries are immutable and cannot be updated or deleted.');
+            }
+        }
 
         if ($op['type'] === 'create') {
             if ($existing !== null) {

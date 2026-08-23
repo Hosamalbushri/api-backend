@@ -473,15 +473,26 @@ class SyncApiTest extends TestCase
                     'isPosted' => true,
                     'sourceType' => 'sale',
                     'sourceId' => (string) Str::uuid(),
-                    'lines' => [[
-                        'uuid' => $lineId,
-                        'accountUuid' => $accountId,
-                        'accountCode' => '4100',
-                        'debit' => 0,
-                        'credit' => 50,
-                        'currencyCode' => 'SAR',
-                        'sortOrder' => 0,
-                    ]],
+                    'lines' => [
+                        [
+                            'uuid' => $lineId,
+                            'accountUuid' => $accountId,
+                            'accountCode' => '1100',
+                            'debit' => 50,
+                            'credit' => 0,
+                            'currencyCode' => 'SAR',
+                            'sortOrder' => 0,
+                        ],
+                        [
+                            'uuid' => (string) Str::uuid(),
+                            'accountUuid' => (string) Str::uuid(),
+                            'accountCode' => '4100',
+                            'debit' => 0,
+                            'credit' => 50,
+                            'currencyCode' => 'SAR',
+                            'sortOrder' => 1,
+                        ],
+                    ],
                 ],
             ],
         ], $this->authHeaders())->assertOk()->assertJsonPath('entity_id', $entryId)->assertJsonPath('remote_version', 1);
@@ -491,4 +502,354 @@ class SyncApiTest extends TestCase
             ->json('changes');
         $this->assertTrue(collect($changes)->contains(fn ($c) => $c['entity_id'] === $entryId));
     }
+
+    public function test_balanced_journal_entry_accepted(): void
+    {
+        $entryId = (string) Str::uuid();
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => [
+                    'uuid' => $entryId,
+                    'voucherNumber' => 'J-BALANCED',
+                    'lines' => [
+                        ['debit' => 100.0, 'credit' => 0.0],
+                        ['debit' => 0.0, 'credit' => 100.0],
+                    ],
+                ],
+            ],
+        ], $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('entity_id', $entryId)
+            ->assertJsonPath('remote_version', 1);
+    }
+
+    public function test_unbalanced_journal_entry_rejected(): void
+    {
+        $entryId = (string) Str::uuid();
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => [
+                    'uuid' => $entryId,
+                    'voucherNumber' => 'J-UNBALANCED',
+                    'lines' => [
+                        ['debit' => 100.0, 'credit' => 0.0],
+                        ['debit' => 0.0, 'credit' => 90.0],
+                    ],
+                ],
+            ],
+        ], $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonPath('error.code', 'validation_error');
+    }
+
+    public function test_failed_journal_entry_rolls_back_without_phantom_sync_changes(): void
+    {
+        $entryId = (string) Str::uuid();
+        $opId = (string) Str::uuid();
+
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => $opId,
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => [
+                    'uuid' => $entryId,
+                    'voucherNumber' => 'J-UNBALANCED-ROLLBACK',
+                    'lines' => [
+                        ['debit' => 100.0, 'credit' => 0.0],
+                        ['debit' => 0.0, 'credit' => 50.0],
+                    ],
+                ],
+            ],
+        ], $this->authHeaders())->assertStatus(422);
+
+        $changes = $this->getJson('/api/v1/sync/pull?entity_type=journal_entry&cursor=0', $this->authHeaders())
+            ->json('changes');
+        $this->assertFalse(collect($changes)->contains(fn ($c) => $c['entity_id'] === $entryId));
+    }
+
+    public function test_sale_and_payment_duplicate_idempotency(): void
+    {
+        $saleId = (string) Str::uuid();
+        $opId = (string) Str::uuid();
+        $op = [
+            'operation_id' => $opId,
+            'entity_type' => 'sale',
+            'entity_id' => $saleId,
+            'type' => 'create',
+            'base_version' => 0,
+            'payload' => [
+                'uuid' => $saleId,
+                'invoiceNumber' => 'INV-001',
+                'totalAmount' => 150.0,
+                'items' => [
+                    ['itemName' => 'Widget', 'quantity' => 2, 'unitPrice' => 75.0],
+                ],
+            ],
+        ];
+
+        $r1 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'sale', 'operation' => $op], $this->authHeaders())->assertOk();
+        $r2 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'sale', 'operation' => $op], $this->authHeaders())->assertOk();
+        $this->assertSame($r1->json('remote_version'), $r2->json('remote_version'));
+
+        $changes = $this->getJson('/api/v1/sync/pull?entity_type=sale&cursor=0', $this->authHeaders())->json('changes');
+        $sales = collect($changes)->filter(fn ($c) => $c['entity_id'] === $saleId);
+        $this->assertCount(1, $sales);
+    }
+
+    public function test_inventory_movement_atomicity_and_idempotency(): void
+    {
+        $movId = (string) Str::uuid();
+        $opId = (string) Str::uuid();
+        $op = [
+            'operation_id' => $opId,
+            'entity_type' => 'inventory_item',
+            'entity_id' => $movId,
+            'type' => 'create',
+            'base_version' => 0,
+            'payload' => [
+                'id' => $movId,
+                'itemCode' => 'SKU-MOVE-1',
+                'itemName' => 'Stock Adj',
+                'systemQuantity' => 20,
+                'actualQuantity' => 20,
+            ],
+        ];
+
+        $res1 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'inventory_item', 'operation' => $op], $this->authHeaders())->assertOk();
+        $res2 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'inventory_item', 'operation' => $op], $this->authHeaders())->assertOk();
+        $this->assertSame($res1->json('remote_version'), $res2->json('remote_version'));
+    }
+
+    public function test_version_increments_exactly_once(): void
+    {
+        $cust = (string) Str::uuid();
+        $op = [
+            'operation_id' => (string) Str::uuid(),
+            'entity_type' => 'customer',
+            'entity_id' => $cust,
+            'type' => 'create',
+            'base_version' => 0,
+            'payload' => ['uuid' => $cust, 'name' => 'Cust 1'],
+        ];
+
+        $r1 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'customer', 'operation' => $op], $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('remote_version', 1);
+
+        $r2 = $this->postJson('/api/v1/sync/push', ['entity_type' => 'customer', 'operation' => $op], $this->authHeaders())
+            ->assertOk()
+            ->assertJsonPath('remote_version', 1);
+    }
+
+    public function test_concurrent_modification_raises_409_conflict(): void
+    {
+        $cust = (string) Str::uuid();
+        // Initial create (v1)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => ['uuid' => $cust, 'name' => 'Original Name'],
+            ],
+        ], $this->authHeaders())->assertOk()->assertJsonPath('remote_version', 1);
+
+        // Device A update from base_version = 1 (succeeds -> v2)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'update',
+                'base_version' => 1,
+                'payload' => ['uuid' => $cust, 'name' => 'Device A Name'],
+            ],
+        ], $this->authHeaders())->assertOk()->assertJsonPath('remote_version', 2);
+
+        // Device B update from stale base_version = 1 (raises 409 conflict)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'update',
+                'base_version' => 1,
+                'payload' => ['uuid' => $cust, 'phone' => '888888888'],
+            ],
+        ], $this->authHeaders())
+            ->assertStatus(409)
+            ->assertJsonPath('error.code', 'conflict');
+    }
+
+    public function test_delete_tombstone_and_stale_edit_conflict(): void
+    {
+        $cust = (string) Str::uuid();
+        // Create (v1)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => ['uuid' => $cust, 'name' => 'To Be Deleted'],
+            ],
+        ], $this->authHeaders())->assertOk();
+
+        // Delete on Device A (v2)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'delete',
+                'base_version' => 1,
+                'payload' => ['uuid' => $cust],
+            ],
+        ], $this->authHeaders())->assertOk()->assertJsonPath('remote_version', 2);
+
+        // Stale update from Device B with base_version = 1 (raises 409 conflict, preventing resurrection)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'customer',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'customer',
+                'entity_id' => $cust,
+                'type' => 'update',
+                'base_version' => 1,
+                'payload' => ['uuid' => $cust, 'name' => 'Resurrect Attempt'],
+            ],
+        ], $this->authHeaders())
+            ->assertStatus(409)
+            ->assertJsonPath('error.details.status', 'conflict')
+            ->assertJsonPath('error.details.resolution_required', true)
+            ->assertJsonPath('error.details.server_version', 2);
+    }
+
+    public function test_posted_journal_entry_is_immutable(): void
+    {
+        $entryId = (string) Str::uuid();
+        // Create posted journal entry
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => [
+                    'uuid' => $entryId,
+                    'isPosted' => true,
+                    'voucherNumber' => 'J-POSTED',
+                    'lines' => [
+                        ['debit' => 100.0, 'credit' => 0.0],
+                        ['debit' => 0.0, 'credit' => 100.0],
+                    ],
+                ],
+            ],
+        ], $this->authHeaders())->assertOk()->assertJsonPath('remote_version', 1);
+
+        // Attempt update on posted journal entry -> rejected with 422
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'update',
+                'base_version' => 1,
+                'payload' => [
+                    'uuid' => $entryId,
+                    'isPosted' => true,
+                    'voucherNumber' => 'J-POSTED-EDIT',
+                    'lines' => [
+                        ['debit' => 200.0, 'credit' => 0.0],
+                        ['debit' => 0.0, 'credit' => 200.0],
+                    ],
+                ],
+            ],
+        ], $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonPath('error.code', 'validation_error');
+
+        // Attempt delete on posted journal entry -> rejected with 422
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'journal_entry',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'journal_entry',
+                'entity_id' => $entryId,
+                'type' => 'delete',
+                'base_version' => 1,
+                'payload' => ['uuid' => $entryId],
+            ],
+        ], $this->authHeaders())
+            ->assertStatus(422)
+            ->assertJsonPath('error.code', 'validation_error');
+    }
+
+    public function test_concurrent_inventory_movements_both_survive(): void
+    {
+        $mov1 = (string) Str::uuid();
+        $mov2 = (string) Str::uuid();
+
+        // Device A movement (-10)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'inventory_movement',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'inventory_movement',
+                'entity_id' => $mov1,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => ['uuid' => $mov1, 'itemCode' => 'ITEM-1', 'quantityChange' => -10],
+            ],
+        ], $this->authHeaders())->assertOk();
+
+        // Device B movement (-20)
+        $this->postJson('/api/v1/sync/push', [
+            'entity_type' => 'inventory_movement',
+            'operation' => [
+                'operation_id' => (string) Str::uuid(),
+                'entity_type' => 'inventory_movement',
+                'entity_id' => $mov2,
+                'type' => 'create',
+                'base_version' => 0,
+                'payload' => ['uuid' => $mov2, 'itemCode' => 'ITEM-1', 'quantityChange' => -20],
+            ],
+        ], $this->authHeaders())->assertOk();
+
+        $changes = $this->getJson('/api/v1/sync/pull?entity_type=inventory_movement&cursor=0', $this->authHeaders())
+            ->json('changes');
+
+        $this->assertTrue(collect($changes)->contains(fn ($c) => $c['entity_id'] === $mov1));
+        $this->assertTrue(collect($changes)->contains(fn ($c) => $c['entity_id'] === $mov2));
+    }
 }
+
+
+
