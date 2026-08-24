@@ -445,9 +445,7 @@ class SyncService implements SyncEngine
             'l' => $limit,
         ]);
 
-        if (SyncChange::query()->where('company_id', $companyId)->count() === 0) {
-            $this->backfillSyncChangesFromEntities($companyId);
-        }
+        $this->backfillSyncChangesFromEntities($companyId);
 
         $query = SyncChange::query()->where('company_id', $companyId);
         if ($entityType) {
@@ -516,19 +514,31 @@ class SyncService implements SyncEngine
 
     private function backfillSyncChangesFromEntities(string $companyId): void
     {
+        $existingTracked = SyncChange::query()
+            ->where('company_id', $companyId)
+            ->select(['entity_type', 'entity_uuid'])
+            ->get()
+            ->map(fn ($row) => $row->entity_type . ':' . $row->entity_uuid)
+            ->toBase()
+            ->flip();
+
         $entities = SyncEntity::query()->where('company_id', $companyId)->get();
-        if ($entities->isEmpty()) {
-            return;
-        }
+        $missingCount = 0;
 
         foreach ($entities as $entity) {
-            $this->recordChange($companyId, $entity, 'create');
+            $key = $entity->entity_type . ':' . $entity->entity_uuid;
+            if (! isset($existingTracked[$key])) {
+                $this->recordChange($companyId, $entity, 'create');
+                $missingCount++;
+            }
         }
 
-        Log::channel('sync')->info('Backfilled {count} sync_changes rows for company={c}', [
-            'count' => $entities->count(),
-            'c' => $companyId,
-        ]);
+        if ($missingCount > 0) {
+            Log::channel('sync')->info('Backfilled {count} missing sync_changes rows for company={c}', [
+                'count' => $missingCount,
+                'c' => $companyId,
+            ]);
+        }
     }
 
     private function epochMs(CarbonImmutable $dt): int
